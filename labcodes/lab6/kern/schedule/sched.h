@@ -47,6 +47,8 @@ struct run_queue {
 void sched_init(void);
 void wakeup_proc(struct proc_struct *proc);
 void schedule(void);
+// 2017-04-29 @wys [this is a bug]
+void sched_class_proc_tick(struct proc_struct *proc);
 
 #endif /* !__KERN_SCHEDULE_SCHED_H__ */
 

@@ -9,7 +9,7 @@
    usually split, and the remainder added to the list as another free block.
    Please see Page 196~198, Section 8.2 of Yan Wei Min's chinese book "Data Structure -- C programming language"
 */
-// LAB2 EXERCISE 1: YOUR CODE
+// LAB2 EXERCISE 1: 2015011369
 // you should rewrite functions: default_init,default_init_memmap,default_alloc_pages, default_free_pages.
 /*
  * Details of FFMA
@@ -67,6 +67,7 @@ default_init(void) {
 
 static void
 default_init_memmap(struct Page *base, size_t n) {
+    // Q: 这个函数真的只会被调用一次吗……
     assert(n > 0);
     struct Page *p = base;
     for (; p != base + n; p ++) {
@@ -96,12 +97,13 @@ default_alloc_pages(size_t n) {
         }
     }
     if (page != NULL) {
-        list_del(&(page->page_link));
         if (page->property > n) {
             struct Page *p = page + n;
             p->property = page->property - n;
-            list_add(&free_list, &(p->page_link));
-    }
+            SetPageProperty(p);  // ...
+            list_add_after(&(page->page_link), &(p->page_link));
+        }
+        list_del(&(page->page_link));
         nr_free -= n;
         ClearPageProperty(page);
     }
@@ -120,23 +122,34 @@ default_free_pages(struct Page *base, size_t n) {
     base->property = n;
     SetPageProperty(base);
     list_entry_t *le = list_next(&free_list);
+    
     while (le != &free_list) {
         p = le2page(le, page_link);
+        if (p > base) break;
         le = list_next(le);
-        if (base + base->property == p) {
-            base->property += p->property;
-            ClearPageProperty(p);
-            list_del(&(p->page_link));
-        }
-        else if (p + p->property == base) {
-            p->property += base->property;
-            ClearPageProperty(base);
-            base = p;
-            list_del(&(p->page_link));
-        }
     }
+    list_entry_t *le_base = &(base->page_link);
+    list_add_before(le, le_base);
+    
+    // check rhs
+    le = list_next(le_base);
+    p = le2page(le, page_link);
+    if (base + base->property == p) {
+        base->property += p->property;
+        ClearPageProperty(p);
+        list_del(le);
+    }
+    
+    // check lhs
+    le = list_prev(le_base);
+    p = le2page(le, page_link);
+    if (p + p->property == base) {
+        p->property += base->property;
+        ClearPageProperty(base);
+        list_del(le_base);
+    }
+    
     nr_free += n;
-    list_add(&free_list, &(base->page_link));
 }
 
 static size_t

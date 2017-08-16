@@ -11,10 +11,11 @@
 DIR dir, *dirp=&dir;
 DIR *
 opendir(const char *path) {
-
+cprintf("hey\n");
     if ((dirp->fd = open(path, O_RDONLY)) < 0) {
         goto failed;
     }
+    // cprintf("opendir: opened\n");
     struct stat __stat, *stat = &__stat;
     if (fstat(dirp->fd, stat) != 0 || !S_ISDIR(stat->st_mode)) {
         goto failed;

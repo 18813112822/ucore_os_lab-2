@@ -217,6 +217,13 @@ runit:
 int
 main(int argc, char **argv) {
     printf("user sh is running!!!");
+    // if (argc > 2 || 1) {
+    //     printf("这参数是假的吧 argc = %d, argv = %d\n", argc, argv);
+    //     printf("*argv = %d\n", *argv);
+    //     // return -1;
+    //     int i;
+    //     for (i = 0; i < argc; i++) printf("argv[%d] = %s\n", i, argv[i]);
+    // }
     int ret, interactive = 1;
     if (argc == 2) {
         if ((ret = reopen(0, argv[1], O_RDONLY)) != 0) {

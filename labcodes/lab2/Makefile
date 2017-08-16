@@ -8,8 +8,8 @@ V       := @
 #USELLVM := 1
 # try to infer the correct GCCPREFX
 ifndef GCCPREFIX
-GCCPREFIX := $(shell if i386-ucore-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/dev/null 2>&1; \
-	then echo 'i386-ucore-elf-'; \
+GCCPREFIX := $(shell if i386-elf-objdump -i 2>&1 | grep '^elf32-i386$$' >/dev/null 2>&1; \
+	then echo 'i386-elf-'; \
 	elif objdump -i 2>&1 | grep 'elf32-i386' >/dev/null 2>&1; \
 	then echo ''; \
 	else echo "***" 1>&2; \
@@ -242,9 +242,10 @@ qemu-nox: targets
 TERMINAL := gnome-terminal
 
 debug: $(UCOREIMG)
-	$(V)$(QEMU) -S -s -parallel stdio $(QEMUOPTS) -serial null &
-	$(V)sleep 2
-	$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+	$(V)$(QEMU) -S -s -no-reboot -parallel stdio $(QEMUOPTS) -serial null &
+	$(V)sleep 1
+	#$(V)$(TERMINAL) -e "$(GDB) -q -x tools/gdbinit"
+	$(V)i386-elf-gdb -q -tui -x tools/gdbinit
 
 debug-nox: $(UCOREIMG)
 	$(V)$(QEMU) -S -s -serial mon:stdio $(QEMUOPTS) -nographic &

@@ -90,6 +90,7 @@ static int
 sys_open(uint32_t arg[]) {
     const char *path = (const char *)arg[0];
     uint32_t open_flags = (uint32_t)arg[1];
+    // cprintf("[kern] sys_open: %s %d\n", path, open_flags);
     return sysfile_open(path, open_flags);
 }
 

@@ -155,6 +155,7 @@ file_testfd(int fd, bool readable, bool writable) {
 // open file
 int
 file_open(char *path, uint32_t open_flags) {
+    // cprintf("file_open %s %d\n", path, open_flags);
     bool readable = 0, writable = 0;
     switch (open_flags & O_ACCMODE) {
     case O_RDONLY: readable = 1; break;
@@ -171,7 +172,7 @@ file_open(char *path, uint32_t open_flags) {
     if ((ret = fd_array_alloc(NO_FD, &file)) != 0) {
         return ret;
     }
-
+// cprintf("fd array alloc ok\n");
     struct inode *node;
     if ((ret = vfs_open(path, open_flags, &node)) != 0) {
         fd_array_free(file);
@@ -193,6 +194,7 @@ file_open(char *path, uint32_t open_flags) {
     file->readable = readable;
     file->writable = writable;
     fd_array_open(file);
+    // cprintf("file_open ret %d\n", file->fd);
     return file->fd;
 }
 

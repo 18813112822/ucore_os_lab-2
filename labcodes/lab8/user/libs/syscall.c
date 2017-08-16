@@ -96,6 +96,7 @@ sys_exec(const char *name, int argc, const char **argv) {
 
 int
 sys_open(const char *path, uint32_t open_flags) {
+    // cprintf("hey sysopen %s %d\n", path, open_flags);
     return syscall(SYS_open, path, open_flags);
 }
 

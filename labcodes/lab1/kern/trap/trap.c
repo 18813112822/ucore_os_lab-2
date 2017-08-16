@@ -46,6 +46,18 @@ idt_init(void) {
       *     You don't know the meaning of this instruction? just google it! and check the libs/x86.h to know more.
       *     Notice: the argument of lidt is idt_pd. try to find it!
       */
+    
+    extern uintptr_t __vectors[];
+    
+    int i;
+    for (i = 0; i < 256; i++) {
+        SETGATE(idt[i], i == 0x80 ? 1 : 0, KERNEL_CS, __vectors[i], i == 0x80 ? 3 : 0);
+    }
+    SETGATE(idt[T_SWITCH_TOU], 1, KERNEL_CS, __vectors[T_SWITCH_TOU], 0);
+    SETGATE(idt[T_SWITCH_TOK], 1, KERNEL_CS, __vectors[T_SWITCH_TOK], 3);
+
+    lidt(&idt_pd);
+    
 }
 
 static const char *
@@ -147,6 +159,9 @@ trap_dispatch(struct trapframe *tf) {
          * (2) Every TICK_NUM cycle, you can print some info using a funciton, such as print_ticks().
          * (3) Too Simple? Yes, I think so!
          */
+        if ((++ticks) % TICK_NUM == 0) {
+            print_ticks();
+        }
         break;
     case IRQ_OFFSET + IRQ_COM1:
         c = cons_getc();
@@ -158,8 +173,22 @@ trap_dispatch(struct trapframe *tf) {
         break;
     //LAB1 CHALLENGE 1 : YOUR CODE you should modify below codes.
     case T_SWITCH_TOU:
+        tf->tf_cs = USER_CS;
+        tf->tf_ds = USER_DS;
+        tf->tf_ss = USER_DS;
+        tf->tf_es = USER_DS;
+        tf->tf_esp = (void*)tf + sizeof(struct trapframe);
+        tf->tf_eflags |= FL_IOPL_MASK;
+        break;
     case T_SWITCH_TOK:
-        panic("T_SWITCH_** ??\n");
+        tf->tf_cs = KERNEL_CS;
+        tf->tf_ds = KERNEL_DS;
+        tf->tf_ss = KERNEL_DS;
+        tf->tf_es = KERNEL_DS;
+        tf->tf_eflags &= ~FL_IOPL_MASK;
+        uint32_t new_esp = tf->tf_esp - sizeof(struct trapframe) + 8;
+        memmove((void*)new_esp, tf, sizeof(struct trapframe) - 8);
+        ((uint32_t*)tf)[-1] = new_esp;
         break;
     case IRQ_OFFSET + IRQ_IDE1:
     case IRQ_OFFSET + IRQ_IDE2:
@@ -170,6 +199,9 @@ trap_dispatch(struct trapframe *tf) {
         if ((tf->tf_cs & 3) == 0) {
             print_trapframe(tf);
             panic("unexpected trap in kernel.\n");
+        } else {
+            print_trapframe(tf);
+            panic("233\n");
         }
     }
 }
